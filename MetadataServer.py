@@ -1,52 +1,70 @@
-#!/usr/bin/env python
-
-import sys
-
-sys.path.append('gen-py')
-
-# Thrift specific imports
-from thrift import Thrift
-from thrift.transport import TSocket
-from thrift.server import TServer
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-
-# Protocol specific imports
-from metadataServer import MetadataServerService
-from shared.ttypes import *
+from util import *
 
 class MetadataServerHandler():
 
     def __init__(self, config_path, my_id):
         # Initialize block
-        pass
+        self.config = parse_config(config_path)
+        self.id = my_id
+        self.files = {}
+        self.block_client = connect('localhost', int(self.config["block"]), BlockServerService.Client)
 
     def getFile(self, filename):
         # Function to handle download request from file
-        pass
+        if filename not in self.files:
+            return file(filename, status=uploadResponseType.ERROR)
+        self.files[filename].status = uploadResponseType.OK
+        return self.files[filename]
 
     def storeFile(self, file):
         # Function to handle upload request
-        pass
+        response = uploadResponse(uploadResponseType.OK, [], [])
 
-    def deleteFile(self, filename):
+        # Ask block server for missing blocks
+        try:
+            missing = self.block_client.missingBlocks(file.hashList)
+        except:
+            return uploadResponse(uploadResponseType.ERROR)
+
+        # Construct response
+        if len(missing) > 0:
+            response.status = uploadResponseType.MISSING_BLOCKS
+            response.hashList = missing
+        else:
+            response.status = uploadResponseType.FILE_ALREADY_PRESENT
+            if file.filename not in self.files:
+                response.status = uploadResponseType.OK
+                self.files[file.filename] = file
+
+        print self.files.keys()
+        return response
+
+    def deleteFile(self, file):
         # Function to handle download request from file
-        pass
+        # TODO validation
+        if file.filename not in self.files:
+            print file.filename
+            return response(responseType.ERROR)
+        del self.files[file.filename]
+        print self.files.keys()
+        return response(responseType.OK)
 
     def readServerPort(self):
         # Get the server port from the config file.
         # id field will determine which metadata server it is 1, 2 or n
         # Your details will be then either metadata1, metadata2 ... metadatan
         # return the port
-        pass
+        return self.config["metadata" + self.id]
 
     # Add other member functions if needed
+    def blocks_match(self, l1, l2):
+        return len(l1) == len(l2) and all([hash1 == hash2 for hash1, hash2 in zip(l1, l2)])
 
 # Add additional classes and functions here if needed
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) != 3:
         print "Invocation <executable> <config_file> <id>"
         exit(-1)
 

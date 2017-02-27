@@ -27,5 +27,6 @@ service BlockServerService {
 	response deleteBlock(1: string hash)
 
 	// Add any procedure you need below
+	list<string> missingBlocks(1: list<string> hashes)
 
 }

@@ -1,42 +1,41 @@
-#!/usr/bin/env python
-
-import sys
-
-sys.path.append('gen-py')
-
-from blockServer import BlockServerService
-from blockServer.ttypes import *
-from shared.ttypes import *
-
-from thrift import Thrift
-from thrift.transport import TSocket
-from thrift.server import TServer
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from util import *
 
 class BlockServerHandler():
 
     def __init__(self, configpath):
         # Initialize using config file, intitalize state etc
-        pass
+        self.config = parse_config(config_path)
+        self.blocks = {}
 
     def storeBlock(self, hashBlock):
         # Store hash block, called by client during upload
-        pass
+        if hashBlock.hash != hashlib.sha256(hashBlock.block).hexdigest():
+            return response(responseType.ERROR)
+        self.blocks[hashBlock.hash] = hashBlock
+        return response(responseType.OK)
 
     def getBlock(self, hash):
         # Retrieve block using hash, called by client during download
-        pass
+        if hash not in self.blocks:
+            return hashBlock(status="ERROR")
+        return self.blocks[hash]
 
     def deleteBlock(self, hash):
         # Delete the particular hash : block pair
-        pass
+        if hash not in self.blocks:
+            return response(responseType.ERROR)
+        del self.blocks[hash]
+        return response(responseType.OK)
 
     def readServerPort(self):
         # In this function read the configuration file and get the port number for the server
-        pass
+        return self.config["block"]
 
     # Add your functions here
+    def missingBlocks(self, missing):
+        # print len(self.blocks)
+        # print "missing", len([hash for hash in missing if hash not in self.blocks]), "blocks"
+        return [hash for hash in missing if hash not in self.blocks]
 
 # Add additional classes and functions here if needed
 
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     # Create a server object
-    server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+    server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
     print "Starting server on port : ", port
 
     try:
