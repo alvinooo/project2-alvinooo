@@ -115,8 +115,8 @@ if __name__ == "__main__":
     block_client = connect("localhost", config['block'], BlockServerService.Client)
 
     try:
-        dataFromServer = rpc(sys.argv[3], metadata_client, block_client, sys.argv[2], sys.argv[4])
-        print dataFromServer
+        result = rpc(sys.argv[3], metadata_client, block_client, sys.argv[2], sys.argv[4])
+        print result
     except Exception as e:
         print "Caught an exception while calling RPC"
         print e
