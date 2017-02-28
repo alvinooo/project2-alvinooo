@@ -16,10 +16,12 @@ def upload(metadata_client, block_client, base_dir, filename):
     except:
         return "ERROR"
 
-    # Upload missing blocks
+    # Upload missing blocks if necessary
     missing_hashes = metadata_response.hashList
     missing_blocks = [b for b in block_list if b.hash in missing_hashes]
 
+    if len(missing_blocks) == 0:
+        return "OK"
     for block in missing_blocks:
         try:
             if block_client.storeBlock(block).message == responseType.ERROR:
@@ -27,7 +29,7 @@ def upload(metadata_client, block_client, base_dir, filename):
         except:
             return "ERROR"
 
-    # Try again
+    # Store filename to metadata mapping
     try:
         metadata_response = metadata_client.storeFile(f)
         if metadata_response.status == uploadResponseType.ERROR or len(metadata_response.hashList) > 0:
@@ -89,7 +91,7 @@ def download(metadata_client, block_client, base_dir, filename):
 
 def delete(metadata_client, block_client, base_dir, filename):
     try:
-        response = block_client.deleteFile(file(filename))
+        response = metadata_client.deleteFile(file(filename))
     except:
         return "ERROR"
     return "OK"
