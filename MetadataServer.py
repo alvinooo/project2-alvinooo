@@ -34,9 +34,13 @@ class MetadataServerHandler():
             response.status = uploadResponseType.FILE_ALREADY_PRESENT
             if file.filename not in self.files:
                 response.status = uploadResponseType.OK
-                self.files[file.filename] = file
+            self.files[file.filename] = file
 
+        # TEST
+        print file.version
+        print "missing", len(response.hashList), "blocks"
         print self.files.keys()
+        # TEST
         return response
 
     def deleteFile(self, file):

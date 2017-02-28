@@ -41,36 +41,49 @@ def upload(metadata_client, block_client, base_dir, filename):
 
 def download(metadata_client, block_client, base_dir, filename):
     path = os.path.realpath(base_dir) + '/' + filename
-    existing_blocks = hash_blocks_directory(base_dir)
+    dir_blocks = hash_blocks_directory(base_dir)
 
     # Get file hashes
     try:
         f = metadata_client.getFile(filename)
-        # file_hashes = metadata_client.getFile(path) ???
+        # f = metadata_client.getFile(path) ???
         if f.status == uploadResponseType.ERROR:
             return "ERROR"
     except:
         return "ERROR"
 
-    file_hashes = f.hashList
-    missing_hashes = [b for b in file_hashes if b.hash not in existing_blocks]
+    # If newer version of file exists locally don't download
+    try:
+        if os.path.getmtime(path) > f.version:
+            # TEST
+            print os.path.getmtime(path), ">", f.version
+            # TEST
+            return "OK"
+        # TEST
+        else:
+            print "Replacing", filename
+        # TEST
+    except:
+        pass
 
     # Download missing blocks
     file_blocks = []
-    for h in file_hashes:
-        if h in existing_blocks:
-            file_blocks.append(existing_blocks[h])
+    for h in f.hashList:
+        if h in dir_blocks:
+            file_blocks.append(dir_blocks[h])
         else:
             try:
-                if file_blocks.append(block_client.getBlock(h)).status == "ERROR":
+                block = block_client.getBlock(h)
+                if block.status == "ERROR":
                     return "ERROR"
+                file_blocks.append(block)
             except:
                 return "ERROR"
 
     # Construct file
-    with open("filename", 'w') as download:
-        for hash in file_blocks:
-            download.write(file_blocks[hash])
+    with open(path, 'w') as download:
+        for b in file_blocks:
+            download.write(b.block)
 
     return "OK"
 

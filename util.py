@@ -59,11 +59,12 @@ def hash_blocks(filename):
 	return hash_list, block_list
 
 def hash_blocks_directory(path):
-	blocks = {}
+	dir_blocks = {}
 	for filename in os.listdir(path):
-		hash, block = hash_blocks(path + '/' + filename)
-		blocks[hash] = block
-	return blocks
+		file_hashes, file_blocks = hash_blocks(path + '/' + filename)
+		for h, b in zip(file_hashes, file_blocks):
+			dir_blocks[h] = b
+	return dir_blocks
 
 # Metadata server
 
