@@ -79,6 +79,7 @@ def download(metadata_client, block_client, base_dir, filename):
                 if block.status == "ERROR":
                     return "ERROR"
                 file_blocks.append(block)
+                print "Downloaded block"
             except:
                 return "ERROR"
 
