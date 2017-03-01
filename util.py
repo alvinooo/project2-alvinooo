@@ -1,5 +1,6 @@
 import sys
 import os
+from time import sleep
 
 sys.path.append('gen-py')
 
@@ -33,12 +34,13 @@ def connect(ip_addr, port, service):
 	protocol = TBinaryProtocol.TBinaryProtocol(transport)
 	client = service(protocol)
 
-	try:
-		transport.open()
-		return client
-	except Exception as e:
-		print "Error while opening socket to server\n", e
-		exit(1)
+	while True:
+		try:
+			transport.open()
+			return client
+		except Exception as e:
+			print "Retrying in 5 sec..."
+			sleep(5)
 
 # Client
 def read_blocks(f, block_size=4194304):
