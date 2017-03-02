@@ -31,10 +31,13 @@ class MetadataServerHandler():
             response.status = uploadResponseType.MISSING_BLOCKS
             response.hashList = missing
         else:
-            response.status = uploadResponseType.FILE_ALREADY_PRESENT
-            if file.filename not in self.files:
+            if file.filename not in self.files or file.version > self.files[file.filename].version:
+                print "Overwriting"
                 response.status = uploadResponseType.OK
-            self.files[file.filename] = file
+                self.files[file.filename] = file
+            else:
+                print "Not overwriting"
+                response.status = uploadResponseType.FILE_ALREADY_PRESENT
 
         # TEST
         print file.version
