@@ -37,10 +37,6 @@ def upload(metadata_client, block_client, base_dir, filename):
     except:
         return "ERROR"
 
-    # # TEST
-    # print metadata_response
-    # # TEST
-
     return "OK"
 
 def download(metadata_client, block_client, base_dir, filename):
@@ -53,7 +49,6 @@ def download(metadata_client, block_client, base_dir, filename):
         if f.status == uploadResponseType.ERROR:
             return "ERROR"
     except Exception as e:
-        print e
         return "ERROR"
 
     # Download missing blocks
@@ -67,9 +62,6 @@ def download(metadata_client, block_client, base_dir, filename):
                 if block.status == "ERROR":
                     return "ERROR"
                 file_blocks.append(block)
-                # TEST
-                print "Downloaded block"
-                # TEST
             except:
                 return "ERROR"
 
