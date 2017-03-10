@@ -1,6 +1,6 @@
 import sys
 import os
-from time import sleep
+import time
 
 sys.path.append('gen-py')
 
@@ -28,22 +28,22 @@ def parse_config(path):
 			config[line[:line.find(':')]] = line[line.find(':')+1:].strip()
 	return config
 
-def connect(ip_addr, port, service):
+def connect(ip_addr, port, service, attempts=2):
 	transport = TSocket.TSocket(ip_addr, port)
 	transport = TTransport.TBufferedTransport(transport)
 	protocol = TBinaryProtocol.TBinaryProtocol(transport)
 	client = service(protocol)
 
-	while True:
+	for i in xrange(attempts):
 		try:
 			transport.open()
 			return client
 		except Exception as e:
-			print "Retrying in 5 sec..."
-			sleep(5)
+			print "Retrying in 1 sec..."
+			time.sleep(1)
 
 # Client
-def read_blocks(f, block_size=4194304):
+def read_blocks(f, block_size=4 * 2**20):
 	while True:
 		block = f.read(block_size)
 		if not block:

@@ -30,4 +30,4 @@
 *.pyc
 
 *.txt
-sftp-config.json
+*.json

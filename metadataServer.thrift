@@ -16,4 +16,5 @@ service MetadataServerService {
 	file getFile(1: string filename),
 	uploadResponse storeFile(1: file f),
 	response deleteFile(1: file f)
+	map<string, file> sync()
 }
