@@ -54,7 +54,7 @@ def hash_blocks(filename):
 	hash_list = []
 	block_list = []
 	with open(filename) as f:
-		for block in read_blocks(f, block_size=5):
+		for block in read_blocks(f):
 			block_hash = hashlib.sha256(block).hexdigest()
 			hash_list.append(block_hash)
 			block_list.append(hashBlock(block_hash, block))
