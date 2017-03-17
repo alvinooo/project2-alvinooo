@@ -1,4 +1,5 @@
 from util import *
+from threading import Timer
 
 class MetadataServerHandler():
 
@@ -7,7 +8,7 @@ class MetadataServerHandler():
         self.config = parse_config(config_path)
         self.id = my_id
         self.files = {}
-        self.block_client = connect('localhost', int(self.config["block"]), BlockServerService.Client)
+        self.block_client = connect('localhost', int(self.config["block"]), BlockServerService.Client, attempts=1000)
 
     def getFile(self, filename):
         # Function to handle download request from file
@@ -31,16 +32,13 @@ class MetadataServerHandler():
             response.status = uploadResponseType.MISSING_BLOCKS
             response.hashList = missing
         else:
-            response.status = uploadResponseType.FILE_ALREADY_PRESENT
-            if file.filename not in self.files:
-                response.status = uploadResponseType.OK
+            response.status = uploadResponseType.OK
             self.files[file.filename] = file
 
-        # TEST
-        print file.version
-        print "missing", len(response.hashList), "blocks"
+        # # TEST
+        print "missing", len(missing), "blocks"
         print self.files.keys()
-        # TEST
+        # # TEST
         return response
 
     def deleteFile(self, file):
@@ -50,7 +48,9 @@ class MetadataServerHandler():
             print file.filename
             return response(responseType.ERROR)
         del self.files[file.filename]
-        print self.files.keys()
+        # # TEST
+        # print self.files.keys()
+        # # TEST
         return response(responseType.OK)
 
     def readServerPort(self):
@@ -59,10 +59,6 @@ class MetadataServerHandler():
         # Your details will be then either metadata1, metadata2 ... metadatan
         # return the port
         return self.config["metadata" + self.id]
-
-    # Add other member functions if needed
-    def blocks_match(self, l1, l2):
-        return len(l1) == len(l2) and all([hash1 == hash2 for hash1, hash2 in zip(l1, l2)])
 
 # Add additional classes and functions here if needed
 
@@ -84,7 +80,7 @@ if __name__ == "__main__":
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     # Create a server object
-    server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+    server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
     print "Starting server on port : ", port
 
     try:

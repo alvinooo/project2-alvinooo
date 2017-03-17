@@ -24,7 +24,7 @@ def upload(metadata_client, block_client, base_dir, filename):
         return "OK"
     for block in missing_blocks:
         try:
-            if block_client.storeBlock(block).message == responseType.ERROR:
+            if block_client.storeBlock(block).message != uploadResponseType.OK:
                 return "ERROR"
         except:
             return "ERROR"
@@ -32,12 +32,10 @@ def upload(metadata_client, block_client, base_dir, filename):
     # Store filename to metadata mapping
     try:
         metadata_response = metadata_client.storeFile(f)
-        if metadata_response.status == uploadResponseType.ERROR or len(metadata_response.hashList) > 0:
+        if metadata_response.status != uploadResponseType.OK or len(metadata_response.hashList) > 0:
             return "ERROR"
     except:
         return "ERROR"
-
-    print metadata_response
 
     return "OK"
 
@@ -48,25 +46,10 @@ def download(metadata_client, block_client, base_dir, filename):
     # Get file hashes
     try:
         f = metadata_client.getFile(filename)
-        # f = metadata_client.getFile(path) ???
         if f.status == uploadResponseType.ERROR:
             return "ERROR"
-    except:
+    except Exception as e:
         return "ERROR"
-
-    # If newer version of file exists locally don't download
-    try:
-        if os.path.getmtime(path) > f.version:
-            # TEST
-            print os.path.getmtime(path), ">", f.version
-            # TEST
-            return "OK"
-        # TEST
-        else:
-            print "Replacing", filename
-        # TEST
-    except:
-        pass
 
     # Download missing blocks
     file_blocks = []
@@ -79,7 +62,6 @@ def download(metadata_client, block_client, base_dir, filename):
                 if block.status == "ERROR":
                     return "ERROR"
                 file_blocks.append(block)
-                print "Downloaded block"
             except:
                 return "ERROR"
 
